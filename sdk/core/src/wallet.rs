@@ -1,5 +1,3 @@
-extern crate rand;
-
 use anyhow::Result;
 use bip39::{Language, Mnemonic};
 use hmac::{Hmac, Mac, NewMac};
