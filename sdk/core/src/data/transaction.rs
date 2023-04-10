@@ -65,20 +65,27 @@ pub struct TransactionOnNetwork {
     pub signature: String,
     pub source_shard: u32,
     pub destination_shard: u32,
-    pub block_nonce: u64,
-    pub block_hash: String,
-    pub notarized_at_source_in_meta_nonce: u64,
-    #[serde(rename = "NotarizedAtSourceInMetaHash")]
-    pub notarized_at_source_in_meta_hash: String,
-    pub notarized_at_destination_in_meta_nonce: u64,
-    pub notarized_at_destination_in_meta_hash: String,
+    #[serde(default)]
+    pub block_nonce: Option<u64>,
+    #[serde(default)]
+    pub block_hash: Option<String>,
+    #[serde(default)]
+    pub notarized_at_source_in_meta_nonce: Option<u64>,
+    #[serde(default, rename = "NotarizedAtSourceInMetaHash")]
+    pub notarized_at_source_in_meta_hash: Option<String>,
+    #[serde(default)]
+    pub notarized_at_destination_in_meta_nonce: Option<u64>,
+    #[serde(default)]
+    pub notarized_at_destination_in_meta_hash: Option<String>,
     pub miniblock_type: String,
     pub miniblock_hash: String,
     pub timestamp: u64,
     pub data: Option<String>,
     pub status: String,
-    pub hyperblock_nonce: u64,
-    pub hyperblock_hash: String,
+    #[serde(default)]
+    pub hyperblock_nonce: Option<u64>,
+    #[serde(default)]
+    pub hyperblock_hash: Option<String>,
     pub smart_contract_results: Option<Vec<ApiSmartContractResult>>,
     pub logs: Option<ApiLogs>,
 }
