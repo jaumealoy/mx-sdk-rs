@@ -14,7 +14,7 @@
         },
         "framework": {
             "name": "multiversx-sc",
-            "version": "0.39.8"
+            "version": "0.46.0"
         }
     },
     "docs": [
@@ -246,6 +246,20 @@
             ]
         }
     ],
+    "esdtAttributes": [
+        {
+            "ticker": "INMODULE",
+            "type": "u32"
+        },
+        {
+            "ticker": "TICKER1",
+            "type": "BigUint"
+        },
+        {
+            "ticker": "TICKER2",
+            "type": "bytes"
+        }
+    ],
     "hasCallback": false,
     "types": {
         "EsdtTokenPayment": {
@@ -375,6 +389,23 @@
                 {
                     "name": "WaitingForFees",
                     "discriminant": 6
+                }
+            ]
+        },
+        "OperationCompletionStatus": {
+            "type": "explicit-enum",
+            "variants": [
+                {
+                    "docs": [
+                        "indicates that operation was completed"
+                    ],
+                    "name": "completed"
+                },
+                {
+                    "docs": [
+                        "indicates that operation was interrupted prematurely, due to low gas"
+                    ],
+                    "name": "interrupted"
                 }
             ]
         },

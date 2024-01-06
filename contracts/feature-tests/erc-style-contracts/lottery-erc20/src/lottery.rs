@@ -23,6 +23,7 @@ pub trait Lottery {
         self.set_erc20_contract_address(&erc20_contract_address);
     }
 
+    #[allow_multiple_var_args]
     #[endpoint]
     fn start(
         &self,
@@ -45,6 +46,7 @@ pub trait Lottery {
         )
     }
 
+    #[allow_multiple_var_args]
     #[endpoint(createLotteryPool)]
     fn create_lottery_pool(
         &self,
@@ -67,6 +69,7 @@ pub trait Lottery {
         )
     }
 
+    #[allow_multiple_var_args]
     #[allow(clippy::too_many_arguments)]
     fn start_lottery(
         &self,
@@ -287,6 +290,7 @@ pub trait Lottery {
     }
 
     fn get_random_winning_ticket_id(&self, prev_winners: &[u32], total_tickets: u32) -> u32 {
+        #[allow(deprecated)]
         let seed = self.blockchain().get_block_random_seed_legacy();
         let mut rand = Random::new(*seed);
 

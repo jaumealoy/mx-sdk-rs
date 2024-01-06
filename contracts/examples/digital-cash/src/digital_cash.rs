@@ -4,171 +4,90 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
+mod constants;
 mod deposit_info;
+mod helpers;
+mod pay_fee_and_fund;
+mod signature_operations;
+mod storage;
 
-use deposit_info::{DepositInfo, FundType};
-
-pub const SECONDS_PER_ROUND: u64 = 6;
-pub use multiversx_sc::api::{ED25519_KEY_BYTE_LEN, ED25519_SIGNATURE_BYTE_LEN};
+use constants::*;
 
 #[multiversx_sc::contract]
-pub trait DigitalCash {
+pub trait DigitalCash:
+    pay_fee_and_fund::PayFeeAndFund
+    + signature_operations::SignatureOperationsModule
+    + helpers::HelpersModule
+    + storage::StorageModule
+{
     #[init]
-    fn init(&self) {}
-
-    //endpoints
-
-    #[endpoint]
-    #[payable("*")]
-    fn fund(&self, address: ManagedAddress, valability: u64) {
-        let payment = self.call_value().egld_or_single_esdt();
-        require!(
-            payment.amount > BigUint::zero(),
-            "amount must be greater than 0"
-        );
-        let fund_type = FundType {
-            token: payment.token_identifier.clone(),
-            nonce: payment.token_nonce,
-        };
-
-        let depositor_address = self.blockchain().get_caller();
-        let mut deposit = DepositInfo {
-            depositor_address,
-            payment,
-            expiration_round: self.get_expiration_round(valability),
-        };
-
-        if self.deposit(&address).contains_key(&fund_type) {
-            self.deposit(&address).entry(fund_type).and_modify(|fund| {
-                deposit.payment.amount += fund.payment.amount.clone();
-                deposit.expiration_round = deposit.expiration_round.max(fund.expiration_round);
-            });
-        } else {
-            self.deposit(&address).insert(fund_type, deposit);
-        }
+    fn init(&self, fee: BigUint, token: EgldOrEsdtTokenIdentifier) {
+        self.whitelist_fee_token(fee, token);
     }
 
-    #[endpoint]
-    fn withdraw(&self, address: ManagedAddress) {
-        require!(!self.deposit(&address).is_empty(), "non-existent key");
-
-        let mut withdrawed_tokens = ManagedVec::<Self::Api, FundType<Self::Api>>::new();
-        let block_round = self.blockchain().get_block_round();
-        let mut transfer_occured = false;
-        for (key, deposit) in self.deposit(&address).iter() {
-            if deposit.expiration_round < block_round {
-                self.send().direct(
-                    &deposit.depositor_address,
-                    &deposit.payment.token_identifier,
-                    deposit.payment.token_nonce,
-                    &deposit.payment.amount,
-                );
-                transfer_occured = true;
-                withdrawed_tokens.push(key);
-            }
-        }
-
-        require!(transfer_occured, "withdrawal has not been available yet");
-
-        for token in withdrawed_tokens.iter() {
-            self.deposit(&address).remove(&token);
-        }
+    #[endpoint(whitelistFeeToken)]
+    #[only_owner]
+    fn whitelist_fee_token(&self, fee: BigUint, token: EgldOrEsdtTokenIdentifier) {
+        require!(self.fee(&token).is_empty(), "Token already whitelisted");
+        self.fee(&token).set(fee);
+        self.whitelisted_fee_tokens().insert(token.clone());
+        self.all_time_fee_tokens().insert(token);
     }
 
-    #[endpoint]
-    fn claim(
-        &self,
-        address: ManagedAddress,
-        signature: ManagedByteArray<Self::Api, ED25519_SIGNATURE_BYTE_LEN>,
-    ) {
-        require!(!self.deposit(&address).is_empty(), "non-existent key");
+    #[endpoint(blacklistFeeToken)]
+    #[only_owner]
+    fn blacklist_fee_token(&self, token: EgldOrEsdtTokenIdentifier) {
+        require!(!self.fee(&token).is_empty(), "Token is not whitelisted");
+        self.fee(&token).clear();
+        self.whitelisted_fee_tokens().swap_remove(&token);
+    }
 
+    #[endpoint(claimFees)]
+    #[only_owner]
+    fn claim_fees(&self) {
+        let fee_tokens_mapper = self.all_time_fee_tokens();
+        let fee_tokens = fee_tokens_mapper.iter();
         let caller_address = self.blockchain().get_caller();
-
-        let addr = address.as_managed_byte_array();
-        let message = caller_address.as_managed_buffer();
-
-        let mut withdrawed_tokens = ManagedVec::<Self::Api, FundType<Self::Api>>::new();
-        let mut transfer_occured = false;
-        let block_round = self.blockchain().get_block_round();
-        require!(
-            self.crypto()
-                .verify_ed25519_legacy_managed::<32>(addr, message, &signature),
-            "invalid signature"
-        );
-
-        for (key, deposit) in self.deposit(&address).iter() {
-            if deposit.expiration_round >= block_round {
-                self.send().direct(
-                    &caller_address,
-                    &deposit.payment.token_identifier,
-                    deposit.payment.token_nonce,
-                    &deposit.payment.amount,
-                );
-                transfer_occured = true;
-                withdrawed_tokens.push(key);
+        let mut collected_esdt_fees = ManagedVec::new();
+        for token in fee_tokens {
+            let fee = self.collected_fees(&token).take();
+            if fee == 0 {
+                continue;
+            }
+            if token == EgldOrEsdtTokenIdentifier::egld() {
+                self.send().direct_egld(&caller_address, &fee);
+            } else {
+                let collected_fee = EsdtTokenPayment::new(token.unwrap_esdt(), 0, fee);
+                collected_esdt_fees.push(collected_fee);
             }
         }
-        require!(transfer_occured, "deposit expired");
-
-        for token in withdrawed_tokens.iter() {
-            self.deposit(&address).remove(&token);
+        if !collected_esdt_fees.is_empty() {
+            self.send()
+                .direct_multi(&caller_address, &collected_esdt_fees);
         }
     }
 
-    #[endpoint]
-    fn forward(&self, address: ManagedAddress, forward_address: ManagedAddress) {
-        let caller = self.blockchain().get_caller();
-
-        for (key, fund) in self.deposit(&address).iter() {
-            require!(
-                fund.depositor_address == caller,
-                "only depositor can forward"
-            );
-            let forwarded_fund = DepositInfo {
-                depositor_address: forward_address.clone(),
-                payment: fund.payment,
-                expiration_round: fund.expiration_round,
-            };
-            self.deposit(&address).insert(key, forwarded_fund);
-        }
-        self.deposit(&caller).clear();
-    }
-
-    //views
-
-    #[view(amount)]
+    #[view(getAmount)]
     fn get_amount(
         &self,
         address: ManagedAddress,
         token: EgldOrEsdtTokenIdentifier,
         nonce: u64,
     ) -> BigUint {
-        require!(!self.deposit(&address).is_empty(), "non-existent key");
+        let deposit_mapper = self.deposit(&address);
+        require!(!deposit_mapper.is_empty(), NON_EXISTENT_KEY_ERR_MSG);
 
-        let data = self.deposit(&address).get(&FundType { token, nonce });
-        let mut amount = BigUint::zero();
-        if let Some(fund) = data {
-            amount = fund.payment.amount;
-        } else {
-            require!(!self.deposit(&address).is_empty(), "non-existent key");
+        let deposit = deposit_mapper.get();
+        if token.is_egld() {
+            return deposit.egld_funds;
         }
-        amount
+
+        for esdt in deposit.esdt_funds.into_iter() {
+            if esdt.token_identifier == token && esdt.token_nonce == nonce {
+                return esdt.amount;
+            }
+        }
+
+        BigUint::zero()
     }
-
-    //private functions
-
-    fn get_expiration_round(&self, valability: u64) -> u64 {
-        let valability_rounds = valability / SECONDS_PER_ROUND;
-        self.blockchain().get_block_round() + valability_rounds
-    }
-
-    //storage
-
-    #[view]
-    #[storage_mapper("deposit")]
-    fn deposit(
-        &self,
-        donor: &ManagedAddress,
-    ) -> MapMapper<FundType<Self::Api>, DepositInfo<Self::Api>>;
 }

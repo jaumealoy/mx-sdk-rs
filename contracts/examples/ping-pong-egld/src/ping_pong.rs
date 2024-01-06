@@ -29,6 +29,7 @@ pub trait PingPong {
     /// `duration_in_seconds` - how much time (in seconds) until contract expires.
     /// `opt_activation_timestamp` - optionally specify the contract to only actvivate at a later date.
     /// `max_funds` - optional funding cap, no more funds than this can be added to the contract.
+    #[allow_multiple_var_args]
     #[init]
     fn init(
         &self,
@@ -54,7 +55,7 @@ pub trait PingPong {
         let payment = self.call_value().egld_value();
 
         require!(
-            payment == self.ping_amount().get(),
+            *payment == self.ping_amount().get(),
             "the payment must match the fixed sum"
         );
 
@@ -74,7 +75,7 @@ pub trait PingPong {
                 &self
                     .blockchain()
                     .get_sc_balance(&EgldOrEsdtTokenIdentifier::egld(), 0)
-                    + &payment
+                    + &*payment
                     <= max_funds,
                 "smart contract full"
             );

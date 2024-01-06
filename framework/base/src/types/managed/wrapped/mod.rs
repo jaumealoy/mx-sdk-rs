@@ -1,5 +1,6 @@
 mod egld_or_esdt_token_identifier;
 mod egld_or_esdt_token_payment;
+mod egld_or_multi_esdt_payment;
 mod encoded_managed_vec_item;
 mod esdt_token_data;
 mod esdt_token_payment;
@@ -19,18 +20,17 @@ mod token_identifier;
 
 pub use egld_or_esdt_token_identifier::EgldOrEsdtTokenIdentifier;
 pub use egld_or_esdt_token_payment::EgldOrEsdtTokenPayment;
+pub use egld_or_multi_esdt_payment::EgldOrMultiEsdtPayment;
 pub(crate) use encoded_managed_vec_item::EncodedManagedVecItem;
 pub use esdt_token_data::EsdtTokenData;
-pub use esdt_token_payment::EsdtTokenPayment;
+pub use esdt_token_payment::{EsdtTokenPayment, MultiEsdtPayment};
 pub use managed_address::ManagedAddress;
 pub use managed_buffer_cached_builder::ManagedBufferCachedBuilder;
 pub(crate) use managed_byte_array::ManagedBufferSizeContext;
 pub use managed_byte_array::ManagedByteArray;
 pub use managed_option::ManagedOption;
 pub use managed_ref::ManagedRef;
-pub use managed_vec::{
-    managed_vec_from_slice_of_boxed_bytes, managed_vec_of_buffers_to_arg_buffer, ManagedVec,
-};
+pub use managed_vec::ManagedVec;
 pub use managed_vec_item::ManagedVecItem;
 pub use managed_vec_owned_iter::ManagedVecOwnedIterator;
 pub use managed_vec_ref::ManagedVecRef;

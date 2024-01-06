@@ -53,8 +53,15 @@ impl TxFunctionName {
     /// The constructor name of any smart contract.
     pub const INIT: TxFunctionName = TxFunctionName::from_static("init");
 
+    /// Gets called exactly once when upgrading to a new version of a smart contract.
+    /// Can be viewed as an "upgrade constructor".
+    pub const UPGRADE: TxFunctionName = TxFunctionName::from_static("upgrade");
+
     /// The the legacy async central callback name of any smart contract.
     pub const CALLBACK: TxFunctionName = TxFunctionName::from_static("callBack");
+
+    /// Not a real function name (in fact it is an illegal name), just a flag to mark whitebox calls.
+    pub const WHITEBOX_CALL: TxFunctionName = TxFunctionName::from_static("<whitebox-call>");
 
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
@@ -62,6 +69,14 @@ impl TxFunctionName {
 
     pub fn into_string(self) -> String {
         self.0.into_owned()
+    }
+
+    pub fn into_bytes(self) -> Vec<u8> {
+        self.into_string().into_bytes()
+    }
+
+    pub fn to_bytes(&self) -> Vec<u8> {
+        self.0.as_bytes().to_vec()
     }
 
     pub fn as_str(&self) -> &str {

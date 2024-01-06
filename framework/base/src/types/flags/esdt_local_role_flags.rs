@@ -1,7 +1,10 @@
+#![allow(clippy::bad_bit_mask)]
+
 use super::EsdtLocalRole;
 use bitflags::bitflags;
 
 bitflags! {
+    #[derive(PartialEq, Clone, Copy)]
     pub struct EsdtLocalRoleFlags: u64 {
         const NONE                  = 0b00000000;
         const MINT                  = 0b00000001;

@@ -1,39 +1,44 @@
-use crate::{display_util::*, num_bigint::BigUint};
-use alloc::vec::Vec;
-use multiversx_sc::types::heap::{Address, H256};
+use num_bigint::BigUint;
 use num_traits::Zero;
+
+use crate::{
+    display_util::*,
+    types::{VMAddress, H256},
+};
 use std::fmt;
 
-use super::TxFunctionName;
+use super::{CallType, TxFunctionName};
 
 #[derive(Clone, Debug)]
 pub struct TxInput {
-    pub from: Address,
-    pub to: Address,
+    pub from: VMAddress,
+    pub to: VMAddress,
     pub egld_value: BigUint,
     pub esdt_values: Vec<TxTokenTransfer>,
     pub func_name: TxFunctionName,
     pub args: Vec<Vec<u8>>,
+    pub call_type: CallType,
     pub gas_limit: u64,
     pub gas_price: u64,
     pub tx_hash: H256,
-    pub promise_callback_closure_data: Vec<u8>,
+    pub promise_callback_closure_data: Option<Vec<u8>>,
     pub callback_payments: CallbackPayments,
 }
 
 impl Default for TxInput {
     fn default() -> Self {
         TxInput {
-            from: Address::zero(),
-            to: Address::zero(),
+            from: VMAddress::zero(),
+            to: VMAddress::zero(),
             egld_value: BigUint::zero(),
             esdt_values: Vec::new(),
             func_name: TxFunctionName::EMPTY,
             args: Vec::new(),
+            call_type: CallType::DirectCall,
             gas_limit: 0,
             gas_price: 0,
             tx_hash: H256::zero(),
-            promise_callback_closure_data: Vec::new(),
+            promise_callback_closure_data: None,
             callback_payments: Default::default(),
         }
     }
@@ -66,7 +71,7 @@ impl TxInput {
 }
 
 /// Models ESDT transfers between accounts.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TxTokenTransfer {
     pub token_identifier: Vec<u8>,
     pub nonce: u64,
@@ -97,5 +102,11 @@ impl TxInput {
         } else {
             self.esdt_values.as_slice()
         }
+    }
+
+    pub fn get_argument_vec_u8(&self, arg_index: i32) -> Vec<u8> {
+        let arg_idx_usize = arg_index as usize;
+        assert!(arg_idx_usize < self.args.len(), "Tx arg index out of range");
+        self.args[arg_idx_usize].clone()
     }
 }

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use bip39::{Language, Mnemonic};
-use hmac::{Hmac, Mac, NewMac};
+use hmac::{Hmac, Mac};
 use pbkdf2::pbkdf2;
 use serde_json::json;
 use sha2::{Digest, Sha512};
@@ -28,8 +28,7 @@ pub struct Wallet {
 impl Wallet {
     // GenerateMnemonic will generate a new mnemonic value using the bip39 implementation
     pub fn generate_mnemonic() -> Mnemonic {
-        let mut rng = bip39::rand::thread_rng();
-        Mnemonic::generate_in_with(&mut rng, Language::English, 24).unwrap()
+        Mnemonic::generate_in(Language::English, 24).unwrap()
     }
 
     fn seed_from_mnemonic(mnemonic: Mnemonic, password: &str) -> [u8; 64] {
@@ -39,7 +38,7 @@ impl Wallet {
 
         let mut seed = [0u8; 64];
 
-        pbkdf2::<Hmac<Sha512>>(
+        let _ = pbkdf2::<Hmac<Sha512>>(
             mnemonic.to_string().as_bytes(),
             salt.as_bytes(),
             2048,
@@ -98,8 +97,13 @@ impl Wallet {
     }
 
     pub fn from_pem_file(file_path: &str) -> Result<Self> {
-        let x = pem::parse(std::fs::read_to_string(file_path).unwrap())?;
-        let x = x.contents[..PRIVATE_KEY_LENGTH].to_vec();
+        let contents = std::fs::read_to_string(file_path).unwrap();
+        Self::from_pem_file_contents(contents)
+    }
+
+    pub fn from_pem_file_contents(contents: String) -> Result<Self> {
+        let x = pem::parse(contents)?;
+        let x = x.contents()[..PRIVATE_KEY_LENGTH].to_vec();
         let priv_key_str = std::str::from_utf8(x.as_slice())?;
         let pri_key = PrivateKey::from_hex_str(priv_key_str)?;
         Ok(Self { priv_key: pri_key })

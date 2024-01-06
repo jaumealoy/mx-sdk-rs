@@ -14,7 +14,7 @@
         },
         "framework": {
             "name": "multiversx-sc",
-            "version": "0.39.8"
+            "version": "0.46.0"
         }
     },
     "docs": [
@@ -679,6 +679,17 @@
             "outputs": []
         },
         {
+            "name": "cancelVoteSlashMember",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "member_to_slash",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
             "name": "slashMember",
             "mutability": "mutable",
             "inputs": [
@@ -991,6 +1002,20 @@
             ]
         }
     ],
+    "esdtAttributes": [
+        {
+            "ticker": "INMODULE",
+            "type": "u32"
+        },
+        {
+            "ticker": "TICKER1",
+            "type": "BigUint"
+        },
+        {
+            "ticker": "TICKER2",
+            "type": "bytes"
+        }
+    ],
     "hasCallback": true,
     "types": {
         "EsdtTokenPayment": {
@@ -1120,6 +1145,23 @@
                 {
                     "name": "WaitingForFees",
                     "discriminant": 6
+                }
+            ]
+        },
+        "OperationCompletionStatus": {
+            "type": "explicit-enum",
+            "variants": [
+                {
+                    "docs": [
+                        "indicates that operation was completed"
+                    ],
+                    "name": "completed"
+                },
+                {
+                    "docs": [
+                        "indicates that operation was interrupted prematurely, due to low gas"
+                    ],
+                    "name": "interrupted"
                 }
             ]
         },

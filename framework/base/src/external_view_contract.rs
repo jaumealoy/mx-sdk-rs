@@ -1,12 +1,16 @@
+use alloc::string::ToString;
+
 use crate::{
-    abi::{EndpointAbi, EndpointMutabilityAbi, InputAbi, OutputAbis, TypeAbi},
+    abi::{EndpointAbi, EndpointMutabilityAbi, EndpointTypeAbi, InputAbi, TypeAbi},
     api::{
-        const_handles, use_raw_handle, CallValueApiImpl, ManagedBufferApi, StorageWriteApiImpl,
+        const_handles, use_raw_handle, CallValueApiImpl, ManagedBufferApiImpl, StorageWriteApiImpl,
         VMApi, EXTERNAL_VIEW_TARGET_ADRESS_KEY,
     },
     io::load_endpoint_args,
     types::ManagedType,
 };
+
+pub const EXTERNAL_VIEW_CONSTRUCTOR_FLAG: &str = "<external view init>";
 
 /// Implementation of external view contract constructors.
 /// They take 1 Address argument and save it to storage under key `external-view-target-address`.
@@ -27,24 +31,26 @@ where
 
 /// The definition for the external view
 pub fn external_view_contract_constructor_abi() -> EndpointAbi {
-    EndpointAbi {
-        docs: &[
+    let mut endpoint_abi = EndpointAbi::new(
+        &[
             "The external view init prepares a contract that looks in another contract's storage.",
             "It takes a single argument, the other contract's address",
             "You won't find this constructors' definition in the contract, it gets injected automatically by the framework. See `multiversx_sc::external_view_contract`.",
             ],
-        name: "init",
-        rust_method_name: "",
-        only_owner: false,
-        only_admin: false,
-        labels: &[],
-        mutability: EndpointMutabilityAbi::Mutable,
-        payable_in_tokens: &[],
-        inputs: [InputAbi{
-            arg_name: "target_contract_address",
-            type_name: crate::types::heap::Address::type_name(),
-            multi_arg: false,
-        }].to_vec(),
-        outputs: OutputAbis::new(),
-    }
+        "init",
+        EXTERNAL_VIEW_CONSTRUCTOR_FLAG,
+        false,
+        false,
+        EndpointMutabilityAbi::Mutable,
+        EndpointTypeAbi::Init,
+        &[],
+        &[],
+        false
+    );
+    endpoint_abi.inputs.push(InputAbi {
+        arg_name: "target_contract_address".to_string(),
+        type_name: crate::types::heap::Address::type_name(),
+        multi_arg: false,
+    });
+    endpoint_abi
 }

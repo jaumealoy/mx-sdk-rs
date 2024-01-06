@@ -26,6 +26,153 @@ They are:
 - `multiversx-chain-scenario-format`, in short `scenario-format`, scenario JSON serializer/deserializer, 1 crate.
 - `multiversx-sdk`, in short `sdk`, allows communication with the chain(s), 1 crate.
 
+## [sc 0.46.0] - 2024-01-05
+- Promises callback memory allocator bugfix.
+- Removed features: `promises`, `managed-map`, `back-transfers`.
+- Removed `hashbrown` dependency from framework.
+- Imports in output now sorted.
+
+## [sc 0.45.2, codec 0.18.3, vm 0.7.1, scenario-format 0.21.1, sdk 0.3.1] - 2023-12-18
+- Updated framework dependencies to the latest versions: syn, bitflags, wasmparser, base64, sha2, sha3, itertools, hmac, pem, pbkdf2, etc.
+- `sc-meta` improvements:
+	- `overflow-checks` field in `sc-config.toml`;
+	- Upgrade: new `--no-check` flag, which disables the compile check after major version upgrades;
+	- Template: `wasm` crates no longer copied for new versions; retroactively patched missing `multiversx.json` file for older versions.
+
+## [sc 0.45.1, codec 0.18.2] - 2023-11-24
+- Fixed sc-meta standalone install backwards compatibility.
+- Better hygiene in codec derive.
+
+## [sc 0.45.0, vm 0.7.0, scenario-format 0.21.0, sdk 0.3.0] - 2023-11-24
+- Replicated VM 1.5 in the Rust VM. This includes support for:
+	- promises,
+	- back-transfers,
+	- modified event logs.
+- New endpoint annotation, `#[upgrade]`. Contract variants with upgrade endpoint, but without init now allowed.
+- Build system:
+	- `wasm` crates now fully generated based on data from `sc-config.toml` and root `Cargo.toml`.
+	- Setting wasm target dir automatically, if not specified, based on workspace.
+
+## [sc 0.44.0, vm 0.6.0] - 2023-11-03
+- Back-transfer:
+	- API support in framework (not yet implemented in the Rust VM);
+	- Feature flag: `"back-transfers"`;
+	- EI updated.
+- ESDT attribute ABI annotation and generator.
+- Multiple var-args disallowed, unless annotating endpoint with `#[allow_multiple_var_args]`.
+- Build system updates:
+	- `multicontract.toml` renamed to `sc-config.toml`;
+	- `add-unlabelled` default true.
+- New `FunctionCall` object & refactoring. Can be used as multi-value to pass contract call info to contracts.
+- `AddressToId` storage mapper.
+
+
+## [sc 0.43.5] - 2023-10-16
+- Meta crate: removed external dependencies to `wasm2wat` and `wasm-objdump`, replaces with internal implementation.
+- NFT subscription module.
+- EsdtTokenData implements `ManagedVecItem`.
+- Contract call `argument` method.
+- `SendRawWrapper` made public.
+
+## [sc 0.43.4] - 2023-09-18
+- Bugfix in `sc-meta`: fixed `--locked argument` in `all` command.
+- Template fix: added `multiversx.json` files.
+- Testing framework: check NFT balances and attributes.
+
+## [sc 0.43.3, vm 0.5.2] - 2023-09-08
+- Added several new methods in the `SendWrapper`, which perform EGLD & ESDT transfers but don't do anything if the value is zero.
+- Added the `DeleteUsername` builtin function to the VM.
+- Minor fixes in API wrapper constructors.
+
+## [sc 0.43.2] - 2023-08-18
+- Template tool tag argument validation bugfix.
+
+## [sc 0.43.1, vm 0.5.1] - 2023-08-18
+- Template tool improvements:
+	- Ability to specify for which framework version to download (based on git tag). The first allowed version is 0.43.0.
+	- Ability to specify path where to create new contract.
+	- Various bugfixes.
+- VM implementation for `get_shard_of_address` VM hook.
+
+## [sc 0.43.0, codec 0.18.1, vm 0.5.0] - 2023-08-16
+- Fixed a rustc compatibility issue when building contracts. The meta crate looks at the rustc version when generating the wasm crate code:
+	- pre-rustc-1.71;
+	- between rustc-1.71 and rustc-1.73;
+	- latest, after rustc-1.73. Also upgraded some dependencies, notably proc-macro2 "1.0.66" and ed25519-dalek "2.0.0".
+- Initial version of the contract template tool in multiversx-sc-meta:
+	- Ability to download and adapt template contracts, to kickstart contract development;
+	- A template mechanism that is customizable on the framework side;
+	- Available templates: adder, empty, crypto-zombies.
+- The Rust debugger is now thread safe.
+- Removed the `big-float` feature of multiversx-sc, because the functionality is already available on mainnet.
+- Arguments `--target-dir-wasm`, `--target-dir-meta`, and `--target-dir-all` in the `multiversx-sc-meta` CLI.
+- Fixed an issue with contract calls and ESDT transfers in the `StaticApi` environment.
+
+## [sc 0.42.0, codec 0.18.0, vm 0.4.0, scenario-format 0.20.0, sdk 0.2.0] - 2023-07-15
+- Multi-endpoints in multi-contracts:
+	- It is now possible to have multiple versions of the same endpoint in different multi-contract variants.
+	- We can also have multiple versions of the constructor.
+- Major architectural redesign of the debugger:
+	- The VM executor interface inserted between the smart contract API objects and the Rust VM. A new `VMHooksApi` is used to connect on the smart contract side. A `VMHooksDispatcher` object and `VMHooksHandler` interface provide the connection on the VM side.
+	- The `VMHooksApi` comes in several flavors (backends):
+		- The old `DebugApi` is now only used at runtime, on the VM context stack;
+		- A new `StaticApi` provides support for managed types in a regular context, without needing to be initialized;
+		- An additional `SingleTxApi` is useful for unit tests. Aside managed types, it also allows some basic context for tx inputs, results, storage and block info.
+	- Removed almost all of the legacy functionality from the smart contract APIs.
+- System SC mock.
+	- It is now possible to issue tokens (fungible, SFT, NFT) in integration tests.
+	- Setting roles is modelled.
+	- It is, however, not fully mocked.
+- Integration of blackbox and whitebox testing into one unified framework.
+	- Whitebox testing was the modus operandi of the old testing framework.
+	- Integration of whitebox functionality into the new testing framework allows easier migration in some specific cases.
+	- Tested the new whitebox framework with the old tests by injecting it into the implementation of the old one.
+- Interactors can now export a trace of their execution, thus producing integration tests.
+	- Integrated tool for retrieving the initial states of the involved accounts from the blockchain.
+	- Tight integration with the scenario testing infrastructure makes generating the trace straightforward;
+	- The same format for the trace is used, as in the case of the integration tests.
+- Interactors can now execute several steps (calls, deploys) in parallel.
+- Redesigned the wrappers around the Rust and Go JSON scenario executors;
+	- Also improved the  `sc-meta test-gen` tool for auto-generating these wrappers.
+	- Using the `ScenarioRunner` interface to abstract away the various backends used to run tests.
+- Redesigned syntax of both the testing and the interactor (snippets) frameworks.
+	- While the codebases are separate (the latter is async Rust), the names and arguments of the methods are the same, and both use the scenario infrastructure.
+	- Methods that allow chaining scenario steps, while also processing results;
+	- Added several defaults in the syntax, for more concise code;
+	- Deprecated the old testing framework;
+	- Updated all contract interactors and blackbox tests with the new syntax;
+	- Upgraded the snippets generator to produce new syntax.
+
+## [sc 0.41.3, vm 0.3.3] - 2023-06-19
+- Bugfix on `ManagedBufferCachedBuilder`, involving large inputs.
+- Explicit enum ABI: `OperationCompletionStatus` is now properly described in the ABI as an enum that gets serialized by name instead of discriminant.
+
+## [sc 0.41.2, codec 0.17.2, vm 0.3.2] - 2023-06-09
+- Releasing a new version of the codec, without the dependency to `wee_alloc`.
+
+## [sc 0.41.1, vm 0.3.1] - 2023-05-15
+- Fixed an edge case for the token storage mappers (`FungibleTokenMapper`, `NonFungibleTokenMapper`).
+
+## [sc 0.41.0, vm 0.3.0] - 2023-05-05
+- Fixed compatibility with rustc v1.71.0.
+- Allocator system:
+	- Contracts can now choose their own allocator. This works in multi-contract contexts.
+	- New allocators: `fail` (default), `static64k`, `leaking`.
+	- Removed dependency to `wee_alloc`, but using it is still possible if the contract references it directly.
+	- Contract call stack size is now configurable in `multicontract.toml`.
+	- The 'panic with message' system now relies on managed buffers instead of on an allocator.
+- Fixed BigUint bitwise operations in the debugger.
+- When building contracts, an additional `.mxsc.json` file is created, which packs both the contract binary, the ABI, and some additional metadata.
+- Refactor: reorganized the meta crate.
+- Deprecated some legacy methods in the API wrappers.
+
+## [sc 0.40.1, vm 0.2.1] - 2023-04-24
+- Building contracts also triggers an EI check, which verifies compatibility with various VM versions. It currently only issues warnings.
+- `ManagedVecItem` implementation for arrays.
+
+## [sc 0.40.0, vm 0.2.0] - 2023-04-20
+- Call value `egld_value` and `all_esdt_transfers` methods return `ManagedRef` instead of owned objects, because they are cached (to avoid accidental corruption of the underlying cache).
+
 ## [sc 0.39.8, vm 0.1.8] - 2023-03-29
 - `multiversx-sc-meta` `test-gen` command: generates Rust integration tests based on scenarios present in the `scenarios` folder.
  - `UnorderedSetMapper` `swap_indexes` method.

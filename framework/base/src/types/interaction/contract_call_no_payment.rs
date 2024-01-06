@@ -5,15 +5,15 @@ use crate::codec::TopEncodeMulti;
 use crate::{
     api::CallTypeApi,
     types::{
-        BigUint, EgldOrEsdtTokenIdentifier, EgldOrEsdtTokenPayment, EsdtTokenPayment,
-        ManagedAddress, ManagedBuffer, ManagedVec, TokenIdentifier,
+        BigUint, EgldOrEsdtTokenIdentifier, EgldOrEsdtTokenPayment, EgldOrMultiEsdtPayment,
+        EsdtTokenPayment, ManagedAddress, ManagedBuffer, ManagedVec, TokenIdentifier,
     },
 };
 
 use super::{
     contract_call_exec::UNSPECIFIED_GAS_LIMIT, contract_call_with_egld::ContractCallWithEgld,
     contract_call_with_multi_esdt::ContractCallWithMultiEsdt, ContractCall,
-    ContractCallWithEgldOrSingleEsdt, ManagedArgBuffer,
+    ContractCallWithAnyPayment, ContractCallWithEgldOrSingleEsdt, FunctionCall, ManagedArgBuffer,
 };
 
 /// Holds metadata for calling another contract, without payments.
@@ -29,8 +29,7 @@ where
 {
     pub(super) _phantom: PhantomData<SA>,
     pub to: ManagedAddress<SA>,
-    pub endpoint_name: ManagedBuffer<SA>,
-    pub arg_buffer: ManagedArgBuffer<SA>,
+    pub function_call: FunctionCall<SA>,
     pub explicit_gas_limit: u64,
     pub(super) _return_type: PhantomData<OriginalResult>,
 }
@@ -68,8 +67,10 @@ where
         ContractCallNoPayment {
             _phantom: PhantomData,
             to,
-            endpoint_name: endpoint_name.into(),
-            arg_buffer: ManagedArgBuffer::new(),
+            function_call: FunctionCall {
+                function_name: endpoint_name.into(),
+                arg_buffer: ManagedArgBuffer::new(),
+            },
             explicit_gas_limit: UNSPECIFIED_GAS_LIMIT,
             _return_type: PhantomData,
         }
@@ -126,6 +127,18 @@ where
         }
     }
 
+    /// Sets payment to be a (potentially) multi-token transfer.
+    #[inline]
+    pub fn with_any_payment(
+        self,
+        payment: EgldOrMultiEsdtPayment<SA>,
+    ) -> ContractCallWithAnyPayment<SA, OriginalResult> {
+        ContractCallWithAnyPayment {
+            basic: self,
+            payment,
+        }
+    }
+
     /// Sets payment to be either EGLD or a single ESDT transfer, as determined at runtime.
     pub fn with_egld_or_single_esdt_transfer<P: Into<EgldOrEsdtTokenPayment<SA>>>(
         self,
@@ -148,5 +161,9 @@ where
         payment_amount: BigUint<SA>,
     ) -> ContractCallWithEgldOrSingleEsdt<SA, OriginalResult> {
         self.with_egld_or_single_esdt_transfer((payment_token, payment_nonce, payment_amount))
+    }
+
+    pub fn into_function_call(self) -> FunctionCall<SA> {
+        self.function_call
     }
 }

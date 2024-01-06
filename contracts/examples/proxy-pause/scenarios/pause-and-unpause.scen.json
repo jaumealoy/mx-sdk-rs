@@ -11,7 +11,7 @@
             "id": "1-check-is-initially-not-paused",
             "tx": {
                 "from": "address:owner",
-                "to": "sc:use-module",
+                "to": "sc:check-pause",
                 "function": "checkPause",
                 "arguments": [],
                 "gasLimit": "30,000,000",
@@ -22,7 +22,6 @@
                     "false"
                 ],
                 "status": "",
-                "logs": [],
                 "gas": "*",
                 "refund": "*"
             }
@@ -41,7 +40,6 @@
             "expect": {
                 "out": [],
                 "status": "",
-                "logs": [],
                 "gas": "*",
                 "refund": "*"
             }
@@ -51,7 +49,7 @@
             "id": "3-check-is-paused",
             "tx": {
                 "from": "address:owner",
-                "to": "sc:use-module",
+                "to": "sc:check-pause",
                 "function": "checkPause",
                 "arguments": [],
                 "gasLimit": "20,000,000",
@@ -62,7 +60,6 @@
                     "true"
                 ],
                 "status": "",
-                "logs": [],
                 "gas": "*",
                 "refund": "*"
             }
@@ -81,7 +78,6 @@
             "expect": {
                 "out": [],
                 "status": "",
-                "logs": [],
                 "gas": "*",
                 "refund": "*"
             }
@@ -91,7 +87,7 @@
             "id": "4-check-has-resumed",
             "tx": {
                 "from": "address:owner",
-                "to": "sc:use-module",
+                "to": "sc:check-pause",
                 "function": "checkPause",
                 "arguments": [],
                 "gasLimit": "20,000,000",
@@ -102,7 +98,6 @@
                     "false"
                 ],
                 "status": "",
-                "logs": [],
                 "gas": "*",
                 "refund": "*"
             }
