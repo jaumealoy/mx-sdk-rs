@@ -26,6 +26,61 @@ They are:
 - `multiversx-chain-scenario-format`, in short `scenario-format`, scenario JSON serializer/deserializer, 1 crate.
 - `multiversx-sdk`, in short `sdk`, allows communication with the chain(s), 1 crate.
 
+## [sc 0.48.0] - 2024-04-09
+- When serializing to a managed buffer, static buffer caching is disabled by default.
+- `sc-meta:` - installers for wasm32 target and wasm-opt.
+- Integrated traits for token management: `FixedSupplyToken`, `Mergeable`.
+
+## [sc 0.47.8] - 2024-03-22
+- Test coverage functionality in sc-meta.
+- Removed deprecation from legacy whitebox testing framework, since it is still used extensively.
+
+## [sc 0.47.7] - 2024-03-15
+- Template bugfix (concerning the interactor).
+
+## [sc 0.47.6] - 2024-03-14
+- Template naming bugfix, regarding numbers in the project name.
+- Added the interactor to the adder template.
+
+## [sc 0.47.5] - 2024-03-08
+- Fixed an issue with `MapMapper` when reading from another contract.
+- Got rid of nightly feature `maybe_uninit_uninit_array`/`maybe_uninit_array_assume_init`.
+
+## [sc 0.47.4, vm 0.8.3] - 2024-02-08
+- Post-build wasm report added to `.mxsc.json` file.
+- Fixed a dependency issue involving ed25519-dalek (downgraded dependency).
+
+## [sc 0.47.3, sdk 0.3.2] - 2024-02-06
+- SDK: changed the way to retrieve the new deployed address afte deploy/
+- Support for reading from another contract for the following storage mappers: `AddressToIdMapper`, `BiDiMapper`, `LinkedListMapper`, `SetMapper`, `SingleValueMapper`, `UniqueIdMapper`, `UnorderedSetMapper`, `UserMapper`, `VecMapper`, `WhitelistMapper`.
+- Additional methods to access data nodes directly in the `SetMapper` and `QueueMapper`.
+
+## [sc 0.47.2, codec 0.18.6, vm 0.8.2, scenario-format 0.22.2] - 2024-02-02
+- Scenario testing infrastructure:
+	- The Rust VM can generate mock addresses, if not specified in advance.
+	- The `sc:` syntax now generates addresses with VM type 0x0500, same as the latest version of mx-scenario-go.
+	- Rust test support for checking `code_metadata`.
+- Explicit discriminants supported for enums.
+- Optimized `top_encode_number` function. It no longer contains branches or loops.
+- Removed reliance on Rust nightly features `is_sorted` and `slice_partition_dedup`.
+
+## [sc 0.47.1, codec 0.18.5, vm 0.8.1, scenario-format 0.22.1] - 2024-01-29
+- Blockchain hooks: `get_code_metadata`, `is_builtin_function`.
+- Support for `mxsc:` syntax in scenarios.
+- Updated dependencies.
+
+## [sc 0.47.0, codec 0.18.4, vm 0.8.0, scenario-format 0.22.0] - 2024-01-23
+- Added support for the code metadata in the Rust VM and Rust scenarios backend.
+- `sc-meta`:
+	- New `mx-scenario-go` installer;
+	- `--nocapture` flag added in `sc-meta test` CLI;
+	- Framework version system refactor,
+- `SetMapper` and `QueueMapper` can read from another contract.
+- Fixed an edge case when generating enum encoding.
+
+## [sc 0.46.1] - 2024-01-10
+- Interactor: fixed parsing of newly issued token identifier.
+
 ## [sc 0.46.0] - 2024-01-05
 - Promises callback memory allocator bugfix.
 - Removed features: `promises`, `managed-map`, `back-transfers`.

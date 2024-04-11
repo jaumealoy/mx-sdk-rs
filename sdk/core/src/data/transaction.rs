@@ -77,6 +77,7 @@ pub struct TransactionOnNetwork {
     pub notarized_at_destination_in_meta_nonce: Option<u64>,
     #[serde(default)]
     pub notarized_at_destination_in_meta_hash: Option<String>,
+    pub processing_type_on_destination: String,
     pub miniblock_type: String,
     pub miniblock_hash: String,
     pub timestamp: u64,
