@@ -133,6 +133,10 @@ pub struct ApiSmartContractResult {
     pub code_metadata: Option<String>,
     pub return_message: Option<String>,
     pub original_sender: Option<String>,
+    #[serde(default)]
+    pub tokens: Option<Vec<String>>,
+    #[serde(default, rename = "esdtValues")]
+    pub esdt_values: Option<Vec<String>>
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
