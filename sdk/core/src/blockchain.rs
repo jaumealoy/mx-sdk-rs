@@ -8,7 +8,7 @@ use crate::data::{
     hyperblock::{HyperBlock, HyperBlockResponse},
     network_config::{NetworkConfig, NetworkConfigResponse},
     network_economics::{NetworkEconomics, NetworkEconomicsResponse},
-    network_status::NetworkStatusResponse,
+    network_status::{NetworkStatusData, NetworkStatusResponse},
     transaction::{
         ArgCreateTransaction, ResponseTxCost, SendTransactionResponse, SendTransactionsResponse,
         Transaction, TransactionInfo, TransactionOnNetwork, TransactionStatus, TxCostResponseData,
@@ -141,6 +141,23 @@ impl CommunicationProxy {
         match resp.data {
             None => Err(anyhow!("{}", resp.error)),
             Some(b) => Ok(b.status.nonce),
+        }
+    }
+
+    pub async fn get_network_status_from_shard(&self, shard_id: u32) -> Result<NetworkStatusData> {
+        let endpoint = format!("{GET_NETWORK_STATUS_ENDPOINT}/{shard_id}");
+
+        let resp = self
+            .client
+            .get(endpoint)
+            .send()
+            .await?
+            .json::<NetworkStatusResponse>()
+            .await?;
+
+        match resp.data {
+            None => Err(anyhow!("{}", resp.error)),
+            Some(b) => Ok(b),
         }
     }
 
