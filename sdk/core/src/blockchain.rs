@@ -149,7 +149,7 @@ impl CommunicationProxy {
 
         let resp = self
             .client
-            .get(endpoint)
+            .get(self.get_endpoint(&endpoint))
             .send()
             .await?
             .json::<NetworkStatusResponse>()
