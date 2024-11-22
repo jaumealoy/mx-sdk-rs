@@ -9,6 +9,8 @@ pub struct NetworkConfig {
     pub denomination: i32,
     #[serde(rename = "erd_gas_per_data_byte")]
     pub gas_per_data_byte: u64,
+    #[serde(rename = "erd_gas_price_modifier")]
+    pub gas_price_modifier: String,
     #[serde(rename = "erd_latest_tag_software_version")]
     pub latest_tag_software_version: String,
     #[serde(rename = "erd_meta_consensus_group_size")]
